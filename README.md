@@ -17,4 +17,4 @@ mocha --require mocha-steps --timeout 0
 ```
 
 ### O resultado no terminal será o seguinte
-![exemplo](doc/exemplo-execucao-teste.jpeg)
+![exemplo](doc/exemplo-execucao-teste.png)
