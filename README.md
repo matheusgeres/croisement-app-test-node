@@ -17,4 +17,4 @@ mocha --require mocha-steps
 ```
 
 ### O resultado no terminal será o seguinte
-![exemplo](https://bitbucket-assetroot.s3.amazonaws.com/repository/Re998ee/1659162521-exemploExecucao.jpeg?Signature=yPVS6hxpxGh57gwlUFekJi%2B%2FHKU%3D&Expires=1558147002&AWSAccessKeyId=AKIAIQWXW6WLXMB5QZAQ)
+![exemplo](doc/exemplo-execucao-teste.jpeg)
