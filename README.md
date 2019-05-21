@@ -2,7 +2,8 @@
 
 Teste automatizado da API do Carrefour para o APP.
 
-Pré-requisito: NodeJS >= 8.15.1
+Pré-requisito: NodeJS >= 8.15.1 
+*(Minha recomendação pessoal de leitura para instalação do Node.JS: https://medium.com/collabcode/como-instalar-node-js-no-linux-corretamente-ubuntu-debian-elementary-os-729fb4c92f2d)*
 
 ## Instruções de instalação
 
