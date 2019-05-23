@@ -300,7 +300,5 @@ describe("Make a purchase with one product", function(){
         );
     });
 
-    after(function(){
-        console.log('\n\ncartCode ==> ', cartCode);
-    })
+    after(() => console.log('\n\ncartCode ==> ', cartCode));
 });

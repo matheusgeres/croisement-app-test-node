@@ -349,7 +349,5 @@ describe("Make a purchase with forty product", function(){
         );
     });
 
-    after(function(){
-        console.log('\n\ncartCode ==> ', cartCode);
-    })
+    after(() => console.log('\n\ncartCode ==> ', cartCode));
 });
