@@ -15,7 +15,7 @@ npm install -g mocha mocha-steps chai should request
 
 ### Na pasta do projeto execute
 ```bash
-mocha --require mocha-steps --timeout 0
+mocha --recursive --require mocha-steps --timeout 0
 ```
 
 ### O resultado no terminal será o seguinte
