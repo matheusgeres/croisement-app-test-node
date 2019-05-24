@@ -12,7 +12,7 @@ const foodURL = urlBase + "/foodws";
 const siteId = "/v2/carrefour";
 
 describe("List of Products", function(){
-    step("Retrieve Products of Categoria Mercado", function(done){
+    step("Retrieve Products of Category 'Mercado'", function(done){
         let path = "/app/products/find-products";
         // Query String com os parâmetros passados na URL para obter os produtos.
         let qs = {
