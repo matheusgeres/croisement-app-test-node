@@ -1,14 +1,16 @@
-const should  = require("should");
-const request = require("request");
-const chai    = require("chai");
-const async   = require("async");
-const logger  = require("mocha-logger");
-const env     = require("../local-food.env.json");
+const should   = require("should");
+const request  = require("request");
+const chai     = require("chai");
+const async    = require("async");
+const logger   = require("mocha-logger");
+const env      = require("../local.env");
 const customer = require("../commons/customer");
-const expect  = chai.expect;
+const cart     = require("../commons/cart");
+const address  = require("../commons/address");
+const expect   = chai.expect;
 
 // Ignora a verificação de certificado para Conexões TLS e requests HTTPS. Mais sobre: https://nodejs.org/api/all.html#cli_node_tls_reject_unauthorized_value
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+// process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 const urlBase          = env.urlBase;
 const urlCrfws         = `${urlBase}/crfws`;
@@ -17,11 +19,11 @@ const foodURL          = `${urlBase}/foodws`;
 const siteId           = "/v2/carrefour";
 
 const url = {
-  urlBase: urlBase,
-  urlCrfws: urlCrfws,
+  urlBase         : urlBase,
+  urlCrfws        : urlCrfws,
   urlAuthorization: urlAuthorization,
-  foodURL: foodURL,
-  siteId: siteId
+  foodURL         : foodURL,
+  siteId          : siteId
 }
 
 describe("Make a purchase with one product", function () {
@@ -35,133 +37,59 @@ describe("Make a purchase with one product", function () {
   let productCodesToDelete;
 
   step("Get customer token", async function (done) {
-    
-    let data = await customer.generate_token(env, url);
-    headers['Authorization'] = data.authorization;
 
-    console.log(data);
-    done()
+    const requestData = {url: url};
+
+    const responseData       = await customer.generate_token(env, requestData);
+    headers['Authorization'] = responseData.authorization;
+
+    done();
   });
 
   step("Retrieve Cart", async function (done) {
-    let path = "/app/cart/";
-    // Query String com os parâmetros passados na URL para obter o carrinho.
-    let qs   = {
-      // cartCode: cartCode,
-      discardSession : true,
-      fixQty         : true,
-      removeAvailable: true
+    const requestData = {
+      url    : url,
+      headers: headers
     };
-    if (env.debug) {
-      logger.log("QueryString:", JSON.stringify(qs, null, 1));
-    }
 
-    request.get(
-        {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-          qs     : qs
-        },
-        function (error, response, body) {
+    const responseData   = await cart.retrieveCart(env, requestData);
+    productCodesToDelete = responseData.productCodesToDelete;
+    cartCode             = responseData.cartCode;
 
-          let _body = {};
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
-
-          // Se encontra o carrinho é retornado, atualiza o código do carrinho.
-          _body.should.have.property("code");
-          expect(_body.code).to.be.a('string');
-          cartCode = _body.code;
-
-          productCodesToDelete = (_body.entries || [])
-          .map(oe => oe.product)
-          .map(p => p.code);
-
-          logger.log('Product to clear', JSON.stringify(productCodesToDelete, null, 1));
-
-          done();
-        }
-    );
+    done();
   });
 
   step("Clear Cart", async function (done) {
     if (productCodesToDelete.length === 0) {
-      this.skip();
+      return done();
     }
 
-    let path = "/app/cart/entry/";
-    let qs   = {
+    const requestData = {
+      url     : url,
+      headers : headers,
       cartCode: cartCode
     };
-    if (env.debug) {
-      logger.log("QueryString:", JSON.stringify(qs, null, 1));
-    }
 
-    async.forEachOfSeries(productCodesToDelete, (productCode, key, callback) => {
-      // Parâmetros enviados para adicionar um produto no carrinho.
-      request.delete(
-          {
-            headers: headers,
-            url    : `${foodURL}${siteId}${path}${productCode}?cartCode=${cartCode}&discardSession=false`,
-            qs     : qs
-          },
-          function (error, response, body) {
+    await cart.clearCart(env, requestData);
 
-            logger.log('Cleaning product', productCode);
-
-            expect(response.statusCode).to.equal(200);
-
-            callback();
-          }
-      );
-    }, err => {
-      // Se tem erro, exibe a mensagem na console.
-      if (err) {
-        console.error(err.message);
-      } else {
-        // Na ausência de erro, informa ao mocha que o processo foi concluído.
-        done();
-      }
-    });
+    done();
   });
 
   step("Retrieve All Addresses", async function (done) {
     if (env.deliveryAddress.force) {
       addressId = env.deliveryAddress.addressId;
-      this.skip();
+      return done();
     }
 
-    let path = "/app/customer/current/addresses";
-    request.get(
-        {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-        },
-        function (error, response, body) {
+    const requestData = {
+      url    : url,
+      headers: headers
+    };
 
-          let _body = {};
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
+    let responseData = await address.retrieveAllAddress(env, requestData);
+    addressId        = responseData.addressId;
 
-          _body.should.have.property("addresses");
-          expect(_body.addresses[0].id).to.be.a('string');
-          addressId = _body.addresses[0].id;
-
-          done();
-        }
-    );
+    done();
   });
 
   step("Set Delivery Adress", async function (done) {
@@ -175,9 +103,10 @@ describe("Make a purchase with one product", function () {
     }
     request.put(
         {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-          form   : form
+          headers  : headers,
+          url      : `${foodURL}${siteId}${path}`,
+          form     : form,
+          strictSSL: env.strictSSL
         },
         function (error, response, body) {
 
@@ -205,9 +134,10 @@ describe("Make a purchase with one product", function () {
 
     request.post(
         {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-          form   : form
+          headers  : headers,
+          url      : `${foodURL}${siteId}${path}`,
+          form     : form,
+          strictSSL: env.strictSSL
         },
         function (error, response, body) {
 
@@ -237,6 +167,7 @@ describe("Make a purchase with one product", function () {
         {
           headers: headers,
           url    : `${foodURL}${siteId}${path}`,
+          strictSSL: env.strictSSL
         },
         function (error, response, body) {
 
@@ -273,7 +204,8 @@ describe("Make a purchase with one product", function () {
         {
           headers: headers,
           url    : `${foodURL}${siteId}${path}`,
-          form   : form
+          form   : form,
+          strictSSL: env.strictSSL
         },
         function (error, response, body) {
 
@@ -315,7 +247,8 @@ describe("Make a purchase with one product", function () {
         {
           headers: headers,
           url    : `${foodURL}${siteId}${path}`,
-          form   : form
+          form   : form,
+          strictSSL: env.strictSSL
         },
         function (error, response, body) {
 
@@ -326,7 +259,7 @@ describe("Make a purchase with one product", function () {
     );
   });
 
-  step("Place Order With Credit Card Method", async function (done) {
+  xstep("Place Order With Credit Card Method", async function (done) {
     let path = "/app/payment/place-order-credit-card-payment";
     let qs   = {
       cartCode: cartCode
@@ -352,7 +285,8 @@ describe("Make a purchase with one product", function () {
           headers: headers,
           url    : `${foodURL}${siteId}${path}`,
           qs     : qs,
-          form   : form
+          form   : form,
+          strictSSL: env.strictSSL
         },
         function (error, response, body) {
 
@@ -373,5 +307,5 @@ describe("Make a purchase with one product", function () {
     );
   });
 
-  after(() => console.log('\n\ncartCode ==> ', cartCode));
+  after(() => logger.log('\n\ncartCode ==> ', cartCode));
 });
