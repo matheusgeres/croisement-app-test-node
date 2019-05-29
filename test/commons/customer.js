@@ -21,8 +21,9 @@ exports.generate_token = async function(env, url) {
 
         request.post(
             {
-            url : `${url.urlAuthorization}${path}`,
-            form: form
+                url : `${url.urlAuthorization}${path}`,
+                form: form,
+                strictSSL: false
             },
             function (error, response, body) {
 
