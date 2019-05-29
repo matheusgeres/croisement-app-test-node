@@ -3,7 +3,8 @@ const request = require("request");
 const chai    = require("chai");
 const async   = require("async");
 const logger  = require("mocha-logger");
-const env     = require("../local.env.json");
+const env     = require("../local-food.env.json");
+const customer = require("../commons/customer");
 const expect  = chai.expect;
 
 // Ignora a verificação de certificado para Conexões TLS e requests HTTPS. Mais sobre: https://nodejs.org/api/all.html#cli_node_tls_reject_unauthorized_value
@@ -14,6 +15,14 @@ const urlCrfws         = `${urlBase}/crfws`;
 const urlAuthorization = `${urlBase}/authorizationserver`;
 const foodURL          = `${urlBase}/foodws`;
 const siteId           = "/v2/carrefour";
+
+const url = {
+  urlBase: urlBase,
+  urlCrfws: urlCrfws,
+  urlAuthorization: urlAuthorization,
+  foodURL: foodURL,
+  siteId: siteId
+}
 
 describe("Make a purchase with one product", function () {
   // Variáveis globais que são reutilizadas entre as chamadas.
@@ -26,46 +35,12 @@ describe("Make a purchase with one product", function () {
   let productCodesToDelete;
 
   step("Get customer token", async function (done) {
-    let path = "/oauth/token";
-    // Chaves para realizar a autenticação
-    let form = {
-      client_id    : env.token.client_id,
-      client_secret: env.token.client_secret,
-      grant_type   : env.token.grant_type,
-      username     : env.token.username,
-      password     : env.token.password,
-    };
-    if (env.debug) {
-      logger.log("Form:", JSON.stringify(form, null, 1));
-    }
+    
+    let data = await customer.generate_token(env, url);
+    headers['Authorization'] = data.authorization;
 
-    request.post(
-        {
-          url : `${urlAuthorization}${path}`,
-          form: form
-        },
-        function (error, response, body) {
-
-          let _body = {};
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
-
-          // Se o token de acesso é adquirido, seta o header com o mesmo.
-          _body.should.have.property("access_token");
-          expect(_body.access_token).to.be.a('string');
-          headers['Authorization'] = `bearer ${_body.access_token}`;
-          _body.should.have.property("refresh_token");
-          expect(_body.refresh_token).to.be.a('string');
-
-          done();
-        }
-    );
+    console.log(data);
+    done()
   });
 
   step("Retrieve Cart", async function (done) {
