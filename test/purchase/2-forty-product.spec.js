@@ -1,10 +1,11 @@
-const should  = require("should");
-const request = require("request");
-const chai    = require("chai");
-const async   = require("async");
-const logger  = require("mocha-logger");
-const env     = require("../local.env.json");
-const expect  = chai.expect;
+const logger   = require("mocha-logger");
+const env      = require("../local-food.env");
+const customer = require("../commons/customer");
+const cart     = require("../commons/cart");
+const payment  = require("../commons/payment");
+const address  = require("../commons/cart/address");
+const delivery = require("../commons/cart/delivery");
+const product  = require("../commons/product");
 
 // Ignora a verificação de certificado para Conexões TLS e requests HTTPS. Mais sobre: https://nodejs.org/api/all.html#cli_node_tls_reject_unauthorized_value
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
