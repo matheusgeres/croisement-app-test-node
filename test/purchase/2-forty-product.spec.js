@@ -8,7 +8,7 @@ const delivery = require("../commons/cart/delivery");
 const product  = require("../commons/product");
 
 // Ignora a verificação de certificado para Conexões TLS e requests HTTPS. Mais sobre: https://nodejs.org/api/all.html#cli_node_tls_reject_unauthorized_value
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+// process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 const urlBase          = env.urlBase;
 const urlCrfws         = `${urlBase}/crfws`;
