@@ -88,3 +88,37 @@ exports.retrieveDeliverySlots = async function (env, requestData) {
     );
   });
 };
+
+exports.setDeliveryMode = async function (env, requestData) {
+  return new Promise((resolve, reject) => {
+    let path = "/app/cart/set-delivery-mode";
+    let form = {
+      deliveryMode   : env.deliveryMode,
+      consignmentCode: requestData.consignmentCode,
+      scheduleDate   : requestData.slotDate,
+      slotCode       : requestData.slotCode
+    };
+    if (env.debug) {
+      logger.log("Form:", JSON.stringify(form, null, 1));
+    }
+
+    request.post(
+        {
+          headers  : requestData.headers,
+          url      : `${requestData.url.foodURL}${requestData.url.siteId}${path}`,
+          form     : form,
+          strictSSL: env.strictSSL
+        },
+        function (error, response, body) {
+
+          expect(response.statusCode).to.equal(200);
+
+          if (error) {
+            reject(error);
+          }
+
+          resolve();
+        }
+    );
+  });
+};

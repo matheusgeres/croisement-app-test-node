@@ -148,31 +148,17 @@ describe("Make a purchase with one product", function () {
   });
 
   step("Set Delivery Mode", async function (done) {
-    let path = "/app/cart/set-delivery-mode";
-    let form = {
-      deliveryMode   : env.deliveryMode,
+    const requestData = {
+      url            : url,
+      headers        : headers,
       consignmentCode: consignmentCode,
-      scheduleDate   : slotDate,
+      slotDate       : slotDate,
       slotCode       : slotCode
     };
-    if (env.debug) {
-      logger.log("Form:", JSON.stringify(form, null, 1));
-    }
 
-    request.post(
-        {
-          headers  : headers,
-          url      : `${foodURL}${siteId}${path}`,
-          form     : form,
-          strictSSL: env.strictSSL
-        },
-        function (error, response, body) {
+    await delivery.setDeliveryMode(env, requestData);
 
-          expect(response.statusCode).to.equal(200);
-
-          done();
-        }
-    );
+    done();
   });
 
   xstep("Place Order With Credit Card Method", async function (done) {
