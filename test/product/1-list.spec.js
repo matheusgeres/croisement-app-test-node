@@ -29,7 +29,7 @@ describe("List of Products", function () {
         },
         function (error, response, body) {
 
-          let _body = {};
+          let _body;
           try {
             _body = JSON.parse(body);
             if (env.debug) {

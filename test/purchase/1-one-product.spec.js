@@ -7,7 +7,7 @@ const env      = require("../local.env");
 const customer = require("../commons/customer");
 const cart     = require("../commons/cart");
 const address  = require("../commons/cart/address");
-const delivery  = require("../commons/cart/delivery");
+const delivery = require("../commons/cart/delivery");
 const expect   = chai.expect;
 
 // Ignora a verificação de certificado para Conexões TLS e requests HTTPS. Mais sobre: https://nodejs.org/api/all.html#cli_node_tls_reject_unauthorized_value
@@ -27,8 +27,6 @@ const url = {
   siteId          : siteId
 };
 
-const isIgnored = bol => bol ? " *" : "";
-
 describe("Make a purchase with one product", function () {
   // Variáveis globais que são reutilizadas entre as chamadas.
   let headers              = {};
@@ -39,11 +37,11 @@ describe("Make a purchase with one product", function () {
   let slotCode;
   let slotDate;
 
-  step("Get customer token", async function (done) {
+  step("Retrieve (Get) customer token", async function (done) {
 
     const requestData = {url: url};
 
-    const responseData       = await customer.generate_token(env, requestData);
+    const responseData       = await customer.retrieve_token(env, requestData);
     headers['Authorization'] = responseData.authorization;
 
     done();
@@ -62,15 +60,16 @@ describe("Make a purchase with one product", function () {
     done();
   });
 
-  step("Clear Cart" + isIgnored(productCodesToDelete.length === 0), async function (done) {
+  step("Clear Cart", async function (done) {
     if (productCodesToDelete.length === 0) {
       return done();
     }
 
     const requestData = {
-      url     : url,
-      headers : headers,
-      cartCode: cartCode
+      url                 : url,
+      headers             : headers,
+      cartCode            : cartCode,
+      productCodesToDelete: productCodesToDelete
     };
 
     await cart.clearCart(env, requestData);
@@ -78,7 +77,7 @@ describe("Make a purchase with one product", function () {
     done();
   });
 
-  step("Retrieve All Addresses" + isIgnored(env.deliveryAddress.force), async function (done) {
+  step("Retrieve All Addresses", async function (done) {
     if (env.deliveryAddress.force) {
       addressId = env.deliveryAddress.addressId;
       return done();
@@ -114,7 +113,7 @@ describe("Make a purchase with one product", function () {
       headers     : headers,
       productCodes: [env.product.productCode],
       quantity    : env.product.quantity
-    }
+    };
 
     await cart.addProducts(env, requestData);
 
@@ -122,7 +121,7 @@ describe("Make a purchase with one product", function () {
 
   });
 
-  step("Retrieve Delivery Modes", async function (done) {
+  step("Retrieve (Get) Delivery Modes", async function (done) {
     const requestData = {
       url    : url,
       headers: headers
@@ -135,44 +134,17 @@ describe("Make a purchase with one product", function () {
   });
 
   step("Retrieve Delivery Slots", async function (done) {
-    let path = "/app/cart/deliveryslots";
-    let form = {
-      deliveryMode   : env.deliverySlots.deliveryMode,
+    const requestData = {
+      url            : url,
+      headers        : headers,
       consignmentCode: consignmentCode
     };
-    if (env.debug) {
-      logger.log("Form:", JSON.stringify(form, null, 1));
-    }
 
-    request.post(
-        {
-          headers  : headers,
-          url      : `${foodURL}${siteId}${path}`,
-          form     : form,
-          strictSSL: env.strictSSL
-        },
-        function (error, response, body) {
+    let responseData = await delivery.retrieveDeliverySlots(env, requestData);
+    slotCode         = responseData.slotCode;
+    slotDate         = responseData.slotDate;
 
-          let _body = {};
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
-
-          _body.should.have.property("availableSlotDataList");
-          expect(_body.availableSlotDataList[0].code).to.be.a('string');
-          expect(_body.availableSlotDataList[0].scheduleDate).to.be.a('string');
-
-          slotCode = _body.availableSlotDataList[0].code;
-          slotDate = _body.availableSlotDataList[0].scheduleDate;
-
-          done();
-        }
-    );
+    done();
   });
 
   step("Set Delivery Mode", async function (done) {
@@ -234,7 +206,7 @@ describe("Make a purchase with one product", function () {
         },
         function (error, response, body) {
 
-          let _body = {};
+          let _body;
           try {
             _body = JSON.parse(body);
             if (env.debug) {

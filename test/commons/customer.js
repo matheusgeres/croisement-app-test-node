@@ -4,7 +4,7 @@ const chai    = require("chai");
 const logger  = require("mocha-logger");
 const expect  = chai.expect;
 
-exports.generate_token = async function (env, requestData) {
+exports.retrieve_token = async function (env, requestData) {
   return new Promise((resolve, reject) => {
     let path = "/oauth/token";
     // Chaves para realizar a autenticação
