@@ -44,7 +44,7 @@ describe("Make a purchase with forty product", function () {
     };
 
     const responseData   = await cart.retrieveCart(env, requestData);
-    productCodesToDelete = responseData.productCodesToDelete;
+    productCodesToDelete = responseData.productCodes;
     cartCode             = responseData.cartCode;
 
     done();
@@ -59,7 +59,7 @@ describe("Make a purchase with forty product", function () {
       url                 : url,
       headers             : headers,
       cartCode            : cartCode,
-      productCodesToDelete: productCodesToDelete
+      productCodes        : productCodesToDelete
     };
 
     await cart.clearCart(env, requestData);
