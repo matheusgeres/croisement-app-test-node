@@ -6,7 +6,7 @@ const logger   = require("mocha-logger");
 const env      = require("../local-food.env");
 const customer = require("../commons/customer");
 const cart     = require("../commons/cart");
-const address  = require("../commons/address");
+const address  = require("../commons/cart/address");
 const expect   = chai.expect;
 
 // Ignora a verificação de certificado para Conexões TLS e requests HTTPS. Mais sobre: https://nodejs.org/api/all.html#cli_node_tls_reject_unauthorized_value
@@ -92,39 +92,27 @@ describe("Make a purchase with one product", function () {
     done();
   });
 
-  step("Set Delivery Adress", async function (done) {
-    let path = "/app/cart/addresses/delivery";
-    let form = {
+  step("Set Delivery Address", async function (done) {
+    const requestData = {
+      url      : url,
+      headers  : headers,
       cartCode : cartCode,
       addressId: addressId
     };
-    if (env.debug) {
-      logger.log("Form:", JSON.stringify(form, null, 1));
-    }
-    request.put(
-        {
-          headers  : headers,
-          url      : `${foodURL}${siteId}${path}`,
-          form     : form,
-          strictSSL: env.strictSSL
-        },
-        function (error, response, body) {
 
-          expect(response.statusCode).to.equal(200);
+    await address.setDeliveryAddress(env, requestData);
 
-          done();
-        }
-    );
+    done();
   });
 
   step("Add Product to Cart", async function (done) {
     const requestData = {
-      url: url,
-      headers: headers,
-      productCodesToPurchase: [env.product.productCode],
-      qty                   : 1
+      url         : url,
+      headers     : headers,
+      productCodes: [env.product.productCode],
+      quantity    : env.product.quantity
     }
-    
+
     await cart.addProducts(env, requestData);
 
     done();
@@ -135,8 +123,8 @@ describe("Make a purchase with one product", function () {
     let path = "/app/cart/deliverymodes";
     request.get(
         {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
+          headers  : headers,
+          url      : `${foodURL}${siteId}${path}`,
           strictSSL: env.strictSSL
         },
         function (error, response, body) {
@@ -172,9 +160,9 @@ describe("Make a purchase with one product", function () {
 
     request.post(
         {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-          form   : form,
+          headers  : headers,
+          url      : `${foodURL}${siteId}${path}`,
+          form     : form,
           strictSSL: env.strictSSL
         },
         function (error, response, body) {
@@ -215,9 +203,9 @@ describe("Make a purchase with one product", function () {
 
     request.post(
         {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-          form   : form,
+          headers  : headers,
+          url      : `${foodURL}${siteId}${path}`,
+          form     : form,
           strictSSL: env.strictSSL
         },
         function (error, response, body) {
@@ -252,10 +240,10 @@ describe("Make a purchase with one product", function () {
 
     request.post(
         {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-          qs     : qs,
-          form   : form,
+          headers  : headers,
+          url      : `${foodURL}${siteId}${path}`,
+          qs       : qs,
+          form     : form,
           strictSSL: env.strictSSL
         },
         function (error, response, body) {
