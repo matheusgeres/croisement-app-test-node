@@ -181,5 +181,5 @@ describe("Make a purchase with forty product", function () {
     done();
   });
 
-  after(() => console.log('\n\ncartCode ==> ', cartCode));
+  after(() => logger.log('cartCode ==> ', cartCode));
 });
