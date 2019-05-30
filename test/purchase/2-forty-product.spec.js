@@ -26,423 +26,150 @@ describe("Make a purchase with forty product", function () {
   let slotCode;
   let slotDate;
 
-  step("Get customer token", async function (done) {
-    let path = "/oauth/token";
-    // Chaves para realizar a autenticação
-    let form = {
-      client_id    : env.token.client_id,
-      client_secret: env.token.client_secret,
-      grant_type   : env.token.grant_type,
-      username     : env.token.username,
-      password     : env.token.password,
-    };
-    if (env.debug) {
-      logger.log("Form:", JSON.stringify(form, null, 1));
-    }
+  step("Retrieve (Get) customer token", async function (done) {
 
-    request.post(
-        {
-          url : `${urlAuthorization}${path}`,
-          form: form
-        },
-        function (error, response, body) {
+    const requestData = {url: url};
 
-          let _body;
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
+    const responseData       = await customer.retrieveToken(env, requestData);
+    headers['Authorization'] = responseData.authorization;
 
-          // Se o token de acesso é adquirido, seta o header com o mesmo.
-          _body.should.have.property("access_token");
-          expect(_body.access_token).to.be.a('string');
-          headers['Authorization'] = `bearer ${_body.access_token}`;
-          _body.should.have.property("refresh_token");
-          expect(_body.refresh_token).to.be.a('string');
-
-          done();
-        }
-    );
+    done();
   });
 
   step("Retrieve Cart", async function (done) {
-    let path = "/app/cart/";
-    // Query String com os parâmetros passados na URL para obter o carrinho.
-    let qs   = {
-      // cartCode: cartCode,
-      discardSession : true,
-      fixQty         : true,
-      removeAvailable: true
+    const requestData = {
+      url    : url,
+      headers: headers
     };
-    if (env.debug) {
-      logger.log("QueryString:", JSON.stringify(qs, null, 1));
-    }
 
-    request.get(
-        {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-          qs     : qs
-        },
-        function (error, response, body) {
+    const responseData   = await cart.retrieveCart(env, requestData);
+    productCodesToDelete = responseData.productCodesToDelete;
+    cartCode             = responseData.cartCode;
 
-          let _body;
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
-
-          // Se encontra o carrinho é retornado, atualiza o código do carrinho.
-          _body.should.have.property("code");
-          expect(_body.code).to.be.a('string');
-          cartCode = _body.code;
-
-          productCodesToDelete = (_body.entries || [])
-          .map(oe => oe.product)
-          .map(p => p.code);
-
-          logger.log('Product to clear', JSON.stringify(productCodesToDelete, null, 1));
-
-          done();
-        }
-    );
+    done();
   });
 
   step("Clear Cart", async function (done) {
     if (productCodesToDelete.length === 0) {
-      this.skip();
+      return done();
     }
 
-    let path = "/app/cart/entry/";
-    let qs   = {
-      cartCode: cartCode
+    const requestData = {
+      url                 : url,
+      headers             : headers,
+      cartCode            : cartCode,
+      productCodesToDelete: productCodesToDelete
     };
-    if (env.debug) {
-      logger.log("QueryString:", JSON.stringify(qs, null, 1));
-    }
 
-    async.forEachOfSeries(productCodesToDelete, (productCode, key, callback) => {
-      // Parâmetros enviados para adicionar um produto no carrinho.
-      request.delete(
-          {
-            headers: headers,
-            url    : `${foodURL}${siteId}${path}${productCode}?cartCode=${cartCode}&discardSession=false`,
-            qs     : qs
-          },
-          function (error, response, body) {
+    await cart.clearCart(env, requestData);
 
-            logger.log('Cleaning product', productCode);
-
-            expect(response.statusCode).to.equal(200);
-
-            callback();
-          }
-      );
-    }, err => {
-      // Se tem erro, exibe a mensagem na console.
-      if (err) {
-        console.error(err.message);
-      } else {
-        // Na ausência de erro, informa ao mocha que o processo foi concluído.
-        done();
-      }
-    });
+    done();
   });
 
   step("Retrieve All Addresses", async function (done) {
     if (env.deliveryAddress.force) {
       addressId = env.deliveryAddress.addressId;
-      this.skip();
+      return done();
     }
 
-    let path = "/app/customer/current/addresses";
-    request.get(
-        {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-        },
-        function (error, response, body) {
+    const requestData = {
+      url    : url,
+      headers: headers
+    };
 
-          let _body;
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
+    let responseData = await customer.retrieveAllAddress(env, requestData);
+    addressId        = responseData.addressId;
 
-          _body.should.have.property("addresses");
-          expect(_body.addresses[0].id).to.be.a('string');
-          addressId = _body.addresses[0].id;
-
-          done();
-        }
-    );
+    done();
   });
 
-  step("Set Delivery Adress", async function (done) {
-    let path = "/app/cart/addresses/delivery";
-    let form = {
+  step("Set Delivery Address", async function (done) {
+    const requestData = {
+      url      : url,
+      headers  : headers,
       cartCode : cartCode,
       addressId: addressId
     };
-    if (env.debug) {
-      logger.log("Form:", JSON.stringify(form, null, 1));
-    }
-    request.put(
-        {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-          form   : form
-        },
-        function (error, response, body) {
 
-          expect(response.statusCode).to.equal(200);
+    await address.setDeliveryAddress(env, requestData);
 
-          done();
-        }
-    );
+    done();
   });
 
   step(`Retrieve Products of Category '${env.product.category}'`, async function (done) {
-    let path = "/app/products/find-products";
-    // Query String com os parâmetros passados na URL para obter os produtos.
-    let qs   = {
-      category   : env.product.category,
-      pageSize   : env.product.pageSize,
-      currentPage: 0
+    const requestData = {
+      url: url
     };
-    request.get(
-        {
-          url: `${foodURL}${siteId}${path}`,
-          qs : qs
-        },
-        function (error, response, body) {
 
-          let _body;
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
+    responseData = await product.findProducts(env, requestData);
+    productCodesToPurchase = responseData.productCodesToPurchase;
 
-          // Se encontra a lista de produtos, faz o map para retornar uma lista de códigos de produtos.
-          if (_body.should.have.property("appProductDataList")) {
-            expect(_body.appProductDataList).to.be.an('array');
-            productCodesToPurchase = _body.appProductDataList.map(obj => obj.code);
-          }
-
-          done();
-        }
-    );
+    done();
   });
 
   step("Add Product to Cart", async function (done) {
-    let path = "/app/cart/entry";
-    let qty  = 1;
+    const requestData = {
+      url         : url,
+      headers     : headers,
+      productCodes: productCodesToPurchase,
+      quantity    : env.product.quantity
+    }
 
-    async.forEachOfSeries(productCodesToPurchase, (productCode, key, callback) => {
-      // Parâmetros enviados para adicionar um produto no carrinho.
-      let form = {
-        cartCode      : cartCode,
-        productCode   : productCode,
-        qty           : qty,
-        discardSession: true
-      };
-      if (env.debug) {
-        logger.log("Form:", JSON.stringify(form, null, 1));
-      }
+    await cart.addProducts(env, requestData);
 
-      request.post(
-          {
-            headers: headers,
-            url    : `${foodURL}${siteId}${path}`,
-            form   : form
-          },
-          function (error, response, body) {
-
-            let _body;
-            try {
-              _body = JSON.parse(body);
-              if (env.debug) {
-                logger.log("Body:", JSON.stringify(_body, null, 1));
-              }
-            } catch (e) {
-              _body = {};
-            }
-
-            _body.should.have.property("code");
-            _body.should.have.property("entries");
-            let el = _body.entries.length - 1;
-            expect(_body.entries[el].product.code).to.equal(productCode);
-
-            callback();
-          }
-      );
-    }, err => {
-      // Se tem erro, exibe a mensagem na console.
-      if (err) {
-        console.error(err.message);
-      } else {
-        // Na ausência de erro, informa ao mocha que o processo foi concluído.
-        done();
-      }
-    });
+    done();
   });
 
-  step("Get Delivery Modes", async function (done) {
-    let path = "/app/cart/deliverymodes";
-    request.get(
-        {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-        },
-        function (error, response, body) {
+  step("Retrieve (Get) Delivery Modes", async function (done) {
+    const requestData = {
+      url    : url,
+      headers: headers
+    };
 
-          let _body;
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
+    let responseData = await delivery.retrieveDeliveryModes(env, requestData);
+    consignmentCode  = responseData.consignmentCode;
 
-          _body.should.have.property("deliveryModeList");
-          expect(_body.deliveryModeList[0].consignmentCode).to.be.a('string');
-          consignmentCode = _body.deliveryModeList[0].consignmentCode;
-
-          done();
-        }
-    );
+    done();
   });
 
   step("Retrieve Delivery Slots", async function (done) {
-    let path = "/app/cart/deliveryslots";
-    let form = {
-      deliveryMode   : env.deliverySlots.deliveryMode,
+    const requestData = {
+      url            : url,
+      headers        : headers,
       consignmentCode: consignmentCode
     };
-    if (env.debug) {
-      logger.log("Form:", JSON.stringify(form, null, 1));
-    }
 
-    request.post(
-        {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-          form   : form
-        },
-        function (error, response, body) {
+    let responseData = await delivery.retrieveDeliverySlots(env, requestData);
+    slotCode         = responseData.slotCode;
+    slotDate         = responseData.slotDate;
 
-          let _body;
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
-
-          _body.should.have.property("availableSlotDataList");
-          expect(_body.availableSlotDataList[0].code).to.be.a('string');
-          expect(_body.availableSlotDataList[0].scheduleDate).to.be.a('string');
-
-          slotCode = _body.availableSlotDataList[0].code;
-          slotDate = _body.availableSlotDataList[0].scheduleDate;
-
-          done();
-        }
-    );
+    done();
   });
 
   step("Set Delivery Mode", async function (done) {
-    let path = "/app/cart/set-delivery-mode";
-    let form = {
-      deliveryMode   : env.deliveryMode,
+    const requestData = {
+      url            : url,
+      headers        : headers,
       consignmentCode: consignmentCode,
-      scheduleDate   : slotDate,
+      slotDate       : slotDate,
       slotCode       : slotCode
     };
-    if (env.debug) {
-      logger.log("Form:", JSON.stringify(form, null, 1));
-    }
 
-    request.post(
-        {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-          form   : form
-        },
-        function (error, response, body) {
+    await delivery.setDeliveryMode(env, requestData);
 
-          expect(response.statusCode).to.equal(200);
-
-          done();
-        }
-    );
+    done();
   });
 
-  step("Place Order With Credit Card Method", async function (done) {
-    let path = "/app/payment/place-order-credit-card-payment";
-    let qs   = {
+  xstep("Place Order With Credit Card Method", async function (done) {
+    const requestData = {
+      url     : url,
+      headers : headers,
       cartCode: cartCode
     };
-    let form = {
-      accountHolderName : env.card.accountHolderName,
-      cardNumber        : env.card.cardNumber,
-      expiryMonth       : env.card.expiryMonth,
-      expiryYear        : env.card.expiryYear,
-      verificationNumber: env.card.verificationNumber,
-      installments      : env.card.installments,
-      cardType          : env.card.cardType,
-      saveCC            : env.card.saveCC,
-      AdobeID           : env.card.saveCC
-    };
-    if (env.debug) {
-      logger.log("Form:", JSON.stringify(form, null, 1));
-      logger.log("QueryString:", JSON.stringify(qs, null, 1));
-    }
 
-    request.post(
-        {
-          headers: headers,
-          url    : `${foodURL}${siteId}${path}`,
-          qs     : qs,
-          form   : form
-        },
-        function (error, response, body) {
+    await payment.placeOrderCreditCard(env, requestData);
 
-          let _body;
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
-
-          expect(response.statusCode).to.equal(200);
-
-          done();
-        }
-    );
+    done();
   });
 
   after(() => console.log('\n\ncartCode ==> ', cartCode));

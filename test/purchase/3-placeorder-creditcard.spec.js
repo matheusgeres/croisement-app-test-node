@@ -1,10 +1,16 @@
+const should   = require("should");
+const request  = require("request");
+const chai     = require("chai");
+const async    = require("async");
 const logger   = require("mocha-logger");
-const env      = require("../local.env");
+const env      = require("../local-food.env");
 const customer = require("../commons/customer");
 const cart     = require("../commons/cart");
 const payment  = require("../commons/payment");
 const address  = require("../commons/cart/address");
 const delivery = require("../commons/cart/delivery");
+const product  = require("../commons/product");
+const expect   = chai.expect;
 
 // Ignora a verificação de certificado para Conexões TLS e requests HTTPS. Mais sobre: https://nodejs.org/api/all.html#cli_node_tls_reject_unauthorized_value
 // process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
@@ -21,18 +27,19 @@ const url = {
   urlAuthorization: urlAuthorization,
   foodURL         : foodURL,
   siteId          : siteId
-};
+}
 
-describe("Make a purchase with one product", function () {
+describe("Place order with Credit Card and forty products on cart.", function () {
   // Variáveis globais que são reutilizadas entre as chamadas.
-  let headers              = {};
-  let productCodesToDelete = [];
   let cartCode;
+  let headers = {};
+  let productCodesToPurchase;
+  let productCodesToDelete;
   let addressId;
   let consignmentCode;
   let slotCode;
   let slotDate;
-
+  
   step("Retrieve (Get) customer token", async function (done) {
 
     const requestData = {url: url};
@@ -50,7 +57,7 @@ describe("Make a purchase with one product", function () {
     };
 
     const responseData   = await cart.retrieveCart(env, requestData);
-    productCodesToDelete = responseData.productCodes;
+    productCodesToDelete = responseData.productCodesToDelete;
     cartCode             = responseData.cartCode;
 
     done();
@@ -62,10 +69,10 @@ describe("Make a purchase with one product", function () {
     }
 
     const requestData = {
-      url         : url,
-      headers     : headers,
-      cartCode    : cartCode,
-      productCodes: productCodesToDelete
+      url                 : url,
+      headers             : headers,
+      cartCode            : cartCode,
+      productCodesToDelete: productCodesToDelete
     };
 
     await cart.clearCart(env, requestData);
@@ -103,18 +110,28 @@ describe("Make a purchase with one product", function () {
     done();
   });
 
+  step(`Retrieve Products of Category '${env.product.category}'`, async function (done) {
+    const requestData = {
+      url: url
+    };
+
+    responseData = await product.findProducts(env, requestData);
+    productCodesToPurchase = responseData.productCodesToPurchase;
+
+    done();
+  });
+
   step("Add Product to Cart", async function (done) {
     const requestData = {
       url         : url,
       headers     : headers,
-      productCodes: [env.product.productCode],
+      productCodes: productCodesToPurchase,
       quantity    : env.product.quantity
-    };
+    }
 
     await cart.addProducts(env, requestData);
 
     done();
-
   });
 
   step("Retrieve (Get) Delivery Modes", async function (done) {
