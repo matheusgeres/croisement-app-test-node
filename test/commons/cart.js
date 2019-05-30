@@ -100,3 +100,59 @@ exports.clearCart = async function (env, requestData) {
     });
   });
 };
+
+exports.addProducts = async function(env, requestData){
+    return new Promise(resolve, reject => {
+        let path = "/app/cart/entry";
+        async.forEachOfSeries(requestData.productCodesToPurchase, (productCode, key, callback) => {
+            // Parâmetros enviados para adicionar um produto no carrinho.
+            let form = {
+              cartCode      : requestData.cartCode,
+              productCode   : productCode,
+              qty           : requestData.qty,
+              discardSession: true
+            };
+            if (env.debug) {
+              logger.log("Form:", JSON.stringify(form, null, 1));
+            }
+      
+            request.post(
+                {
+                  headers: requestData.headers,
+                  url    : `${requestData.url.foodURL}${requestData.url.siteId}${path}`,
+                  form   : form,
+                  strictSSL: env.strictSSL
+                },
+                function (error, response, body) {
+      
+                  let _body = {};
+                  try {
+                    _body = JSON.parse(body);
+                    if (env.debug) {
+                      logger.log("Body:", JSON.stringify(_body, null, 1));
+                    }
+                  } catch (e) {
+                    _body = {};
+                  }
+      
+                  _body.should.have.property("code");
+                  _body.should.have.property("entries");
+                  let el = _body.entries.length - 1;
+                  expect(_body.entries[el].product.code).to.equal(productCode);
+      
+                  callback();
+                }
+            );
+          }, err => {
+            // Se tem erro, exibe a mensagem na console.
+            if (err) {
+              logger.error(err.message);
+              reject();
+            } else {
+              // Na ausência de erro, informa ao mocha que o processo foi concluído.
+              resolve();
+            }
+          });
+    });
+    
+}

@@ -118,47 +118,15 @@ describe("Make a purchase with one product", function () {
   });
 
   step("Add Product to Cart", async function (done) {
-    let path        = "/app/cart/entry";
-    let productCode = env.product.productCode;
-    let qty         = 1;
-    // Parâmetros enviados para adicionar um produto no carrinho.
-    let form        = {
-      cartCode      : cartCode,
-      productCode   : productCode,
-      qty           : qty,
-      discardSession: true
-    };
-    if (env.debug) {
-      logger.log("Form:", JSON.stringify(form, null, 1));
+    const requestData = {
+      productCodesToPurchase: env.product.productCode,
+      qty                   : 1
     }
+    
+    await cart.addProducts(env, requestData);
 
-    request.post(
-        {
-          headers  : headers,
-          url      : `${foodURL}${siteId}${path}`,
-          form     : form,
-          strictSSL: env.strictSSL
-        },
-        function (error, response, body) {
+    done();
 
-          let _body = {};
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
-
-          _body.should.have.property("code");
-          _body.should.have.property("entries");
-          let el = _body.entries.length - 1;
-          expect(_body.entries[el].product.code).to.equal(productCode);
-
-          done();
-        }
-    );
   });
 
   step("Get Delivery Modes", async function (done) {
