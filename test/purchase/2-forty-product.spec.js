@@ -16,6 +16,14 @@ const urlAuthorization = `${urlBase}/authorizationserver`;
 const foodURL          = `${urlBase}/foodws`;
 const siteId           = "/v2/carrefour";
 
+const url = {
+  urlBase         : urlBase,
+  urlCrfws        : urlCrfws,
+  urlAuthorization: urlAuthorization,
+  foodURL         : foodURL,
+  siteId          : siteId
+};
+
 describe("Make a purchase with forty product", function () {
   // Variáveis globais que são reutilizadas entre as chamadas.
   let cartCode;
