@@ -6,6 +6,7 @@ const logger   = require("mocha-logger");
 const env      = require("../local.env");
 const customer = require("../commons/customer");
 const cart     = require("../commons/cart");
+const payment  = require("../commons/payment");
 const address  = require("../commons/cart/address");
 const delivery = require("../commons/cart/delivery");
 const expect   = chai.expect;
@@ -161,52 +162,16 @@ describe("Make a purchase with one product", function () {
     done();
   });
 
-  xstep("Place Order With Credit Card Method", async function (done) {
-    let path = "/app/payment/place-order-credit-card-payment";
-    let qs   = {
+  step("Place Order With Credit Card Method", async function (done) {
+    const requestData = {
+      url     : url,
+      headers : headers,
       cartCode: cartCode
     };
-    let form = {
-      accountHolderName : env.card.accountHolderName,
-      cardNumber        : env.card.cardNumber,
-      expiryMonth       : env.card.expiryMonth,
-      expiryYear        : env.card.expiryYear,
-      verificationNumber: env.card.verificationNumber,
-      installments      : env.card.installments,
-      cardType          : env.card.cardType,
-      saveCC            : env.card.saveCC,
-      AdobeID           : env.card.saveCC
-    };
-    if (env.debug) {
-      logger.log("Form:", JSON.stringify(form, null, 1));
-      logger.log("QueryString:", JSON.stringify(qs, null, 1));
-    }
 
-    request.post(
-        {
-          headers  : headers,
-          url      : `${foodURL}${siteId}${path}`,
-          qs       : qs,
-          form     : form,
-          strictSSL: env.strictSSL
-        },
-        function (error, response, body) {
+    await payment.placeOrderCreditCard(env, requestData);
 
-          let _body;
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
-
-          expect(response.statusCode).to.equal(200);
-
-          done();
-        }
-    );
+    done();
   });
 
   after(() => logger.log('cartCode ==> ', cartCode));
