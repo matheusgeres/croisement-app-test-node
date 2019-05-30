@@ -1,7 +1,3 @@
-const should   = require("should");
-const request  = require("request");
-const chai     = require("chai");
-const async    = require("async");
 const logger   = require("mocha-logger");
 const env      = require("../local.env");
 const customer = require("../commons/customer");
@@ -9,7 +5,6 @@ const cart     = require("../commons/cart");
 const payment  = require("../commons/payment");
 const address  = require("../commons/cart/address");
 const delivery = require("../commons/cart/v2/delivery");
-const expect   = chai.expect;
 
 // Ignora a verificação de certificado para Conexões TLS e requests HTTPS. Mais sobre: https://nodejs.org/api/all.html#cli_node_tls_reject_unauthorized_value
 // process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
@@ -55,7 +50,7 @@ describe("Make a purchase with one product", function () {
     };
 
     const responseData   = await cart.retrieveCart(env, requestData);
-    productCodesToDelete = responseData.productCodesToDelete;
+    productCodesToDelete = responseData.productCodes;
     cartCode             = responseData.cartCode;
 
     done();
@@ -67,10 +62,10 @@ describe("Make a purchase with one product", function () {
     }
 
     const requestData = {
-      url                 : url,
-      headers             : headers,
-      cartCode            : cartCode,
-      productCodesToDelete: productCodesToDelete
+      url         : url,
+      headers     : headers,
+      cartCode    : cartCode,
+      productCodes: productCodesToDelete
     };
 
     await cart.clearCart(env, requestData);
@@ -128,13 +123,18 @@ describe("Make a purchase with one product", function () {
       headers: headers
     };
 
+    const debug = env.debug;
+    env.debug   = true;
+
     let responseData = await delivery.retrieveDeliveryModes(env, requestData);
     consignmentCode  = responseData.consignmentCode;
+
+    env.debug = debug;
 
     done();
   });
 
-  step("Retrieve Delivery Slots", async function (done) {
+  xstep("Retrieve Delivery Slots", async function (done) {
     const requestData = {
       url            : url,
       headers        : headers,
@@ -148,7 +148,7 @@ describe("Make a purchase with one product", function () {
     done();
   });
 
-  step("Set Delivery Mode", async function (done) {
+  xstep("Set Delivery Mode", async function (done) {
     const requestData = {
       url            : url,
       headers        : headers,
@@ -162,7 +162,7 @@ describe("Make a purchase with one product", function () {
     done();
   });
 
-  step("Place Order With Credit Card Method", async function (done) {
+  xstep("Place Order With Credit Card Method", async function (done) {
     const requestData = {
       url     : url,
       headers : headers,

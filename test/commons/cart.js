@@ -43,8 +43,8 @@ exports.retrieveCart = async function (env, requestData) {
           expect(_body.code).to.be.a('string');
 
           const responseData = {
-            cartCode            : _body.code,
-            productCodesToDelete: (_body.entries || [])
+            cartCode    : _body.code,
+            productCodes: (_body.entries || [])
             .map(oe => oe.product)
             .map(p => p.code),
           };
@@ -72,7 +72,7 @@ exports.clearCart = async function (env, requestData) {
       logger.log("QueryString:", JSON.stringify(qs, null, 1));
     }
 
-    async.forEachOfSeries(requestData.productCodesToDelete, (productCode, key, callback) => {
+    async.forEachOfSeries(requestData.productCodes, (productCode, key, callback) => {
       // Parâmetros enviados para adicionar um produto no carrinho.
       request.delete(
           {
