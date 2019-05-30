@@ -162,7 +162,7 @@ describe("Make a purchase with one product", function () {
     done();
   });
 
-  xstep("Place Order With Credit Card Method", async function (done) {
+  step("Place Order With Credit Card Method", async function (done) {
     const requestData = {
       url     : url,
       headers : headers,
