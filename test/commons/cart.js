@@ -102,7 +102,7 @@ exports.clearCart = async function (env, requestData) {
 };
 
 exports.addProducts = async function(env, requestData){
-    return new Promise(resolve, reject => {
+    return new Promise((resolve, reject) => {
         let path = "/app/cart/entry";
         async.forEachOfSeries(requestData.productCodesToPurchase, (productCode, key, callback) => {
             // Parâmetros enviados para adicionar um produto no carrinho.

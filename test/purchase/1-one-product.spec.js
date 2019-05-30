@@ -3,7 +3,7 @@ const request  = require("request");
 const chai     = require("chai");
 const async    = require("async");
 const logger   = require("mocha-logger");
-const env      = require("../local.env");
+const env      = require("../local-food.env");
 const customer = require("../commons/customer");
 const cart     = require("../commons/cart");
 const address  = require("../commons/address");
@@ -119,7 +119,8 @@ describe("Make a purchase with one product", function () {
 
   step("Add Product to Cart", async function (done) {
     const requestData = {
-      productCodesToPurchase: env.product.productCode,
+      url: url,
+      productCodesToPurchase: [env.product.productCode],
       qty                   : 1
     }
     
