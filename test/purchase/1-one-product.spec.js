@@ -120,6 +120,7 @@ describe("Make a purchase with one product", function () {
   step("Add Product to Cart", async function (done) {
     const requestData = {
       url: url,
+      headers: headers,
       productCodesToPurchase: [env.product.productCode],
       qty                   : 1
     }
