@@ -3,10 +3,11 @@ const request  = require("request");
 const chai     = require("chai");
 const async    = require("async");
 const logger   = require("mocha-logger");
-const env      = require("../local-food.env");
+const env      = require("../local.env");
 const customer = require("../commons/customer");
 const cart     = require("../commons/cart");
 const address  = require("../commons/cart/address");
+const delivery  = require("../commons/cart/delivery");
 const expect   = chai.expect;
 
 // Ignora a verificação de certificado para Conexões TLS e requests HTTPS. Mais sobre: https://nodejs.org/api/all.html#cli_node_tls_reject_unauthorized_value
@@ -24,17 +25,19 @@ const url = {
   urlAuthorization: urlAuthorization,
   foodURL         : foodURL,
   siteId          : siteId
-}
+};
+
+const isIgnored = bol => bol ? " *" : "";
 
 describe("Make a purchase with one product", function () {
   // Variáveis globais que são reutilizadas entre as chamadas.
+  let headers              = {};
+  let productCodesToDelete = [];
   let cartCode;
-  let headers = {};
   let addressId;
   let consignmentCode;
   let slotCode;
   let slotDate;
-  let productCodesToDelete;
 
   step("Get customer token", async function (done) {
 
@@ -59,7 +62,7 @@ describe("Make a purchase with one product", function () {
     done();
   });
 
-  step("Clear Cart", async function (done) {
+  step("Clear Cart" + isIgnored(productCodesToDelete.length === 0), async function (done) {
     if (productCodesToDelete.length === 0) {
       return done();
     }
@@ -75,7 +78,7 @@ describe("Make a purchase with one product", function () {
     done();
   });
 
-  step("Retrieve All Addresses", async function (done) {
+  step("Retrieve All Addresses" + isIgnored(env.deliveryAddress.force), async function (done) {
     if (env.deliveryAddress.force) {
       addressId = env.deliveryAddress.addressId;
       return done();
@@ -86,7 +89,7 @@ describe("Make a purchase with one product", function () {
       headers: headers
     };
 
-    let responseData = await address.retrieveAllAddress(env, requestData);
+    let responseData = await customer.retrieveAllAddress(env, requestData);
     addressId        = responseData.addressId;
 
     done();
@@ -119,33 +122,16 @@ describe("Make a purchase with one product", function () {
 
   });
 
-  step("Get Delivery Modes", async function (done) {
-    let path = "/app/cart/deliverymodes";
-    request.get(
-        {
-          headers  : headers,
-          url      : `${foodURL}${siteId}${path}`,
-          strictSSL: env.strictSSL
-        },
-        function (error, response, body) {
+  step("Retrieve Delivery Modes", async function (done) {
+    const requestData = {
+      url    : url,
+      headers: headers
+    };
 
-          let _body = {};
-          try {
-            _body = JSON.parse(body);
-            if (env.debug) {
-              logger.log("Body:", JSON.stringify(_body, null, 1));
-            }
-          } catch (e) {
-            _body = {};
-          }
+    let responseData = await delivery.retrieveDeliveryModes(env, requestData);
+    consignmentCode  = responseData.consignmentCode;
 
-          _body.should.have.property("deliveryModeList");
-          expect(_body.deliveryModeList[0].consignmentCode).to.be.a('string');
-          consignmentCode = _body.deliveryModeList[0].consignmentCode;
-
-          done();
-        }
-    );
+    done();
   });
 
   step("Retrieve Delivery Slots", async function (done) {
@@ -265,5 +251,5 @@ describe("Make a purchase with one product", function () {
     );
   });
 
-  after(() => logger.log('\n\ncartCode ==> ', cartCode));
+  after(() => logger.log('cartCode ==> ', cartCode));
 });
