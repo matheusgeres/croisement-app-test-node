@@ -42,7 +42,7 @@ describe("Make a purchase with one product", function () {
 
     const requestData = {url: url};
 
-    const responseData       = await customer.retrieve_token(env, requestData);
+    const responseData       = await customer.retrieveToken(env, requestData);
     headers['Authorization'] = responseData.authorization;
 
     done();
