@@ -123,13 +123,8 @@ describe("Make a purchase with one product", function () {
       headers: headers
     };
 
-    const debug = env.debug;
-    env.debug   = true;
-
     let responseData = await delivery.retrieveDeliveryModes(env, requestData);
     consignmentCode  = responseData.consignmentCode;
-
-    env.debug = debug;
 
     done();
   });
