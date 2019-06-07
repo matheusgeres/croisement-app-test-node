@@ -2,7 +2,7 @@
 
 Teste automatizado da API do Carrefour para o APP.
 
-Pré-requisito: NodeJS >= 8.15.1
+Pré-requisito: NodeJS >= 11.0.0
  
 *(Minha recomendação pessoal de leitura para instalação do Node.JS: https://medium.com/collabcode/como-instalar-node-js-no-linux-corretamente-ubuntu-debian-elementary-os-729fb4c92f2d)*
 
@@ -15,7 +15,7 @@ npm install -g mocha mocha-steps chai should request
 
 ### Na pasta do projeto execute
 ```bash
-mocha --recursive --require mocha-steps --timeout 0
+mocha --recursive --require mocha-steps --timeout 0 
 ```
 
 ### O resultado no terminal será o seguinte
