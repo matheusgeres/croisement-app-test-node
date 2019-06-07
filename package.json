@@ -4,8 +4,7 @@
   "description": "Teste automatizado da API do Carrefour para o APP.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "make-purchase": "mocha --require mocha-steps --timeout 0"
+    "test": "mocha --recursive --require mocha-steps --timeout 0 "
   },
   "keywords": [
     "rest",
