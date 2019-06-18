@@ -13,6 +13,11 @@ Pré-requisito: NodeJS >= 11.0.0
 npm install -g mocha mocha-steps chai should request
 ```
 
+### Instale as dependências de teste no projeto
+```bash
+npm install mocha mocha-steps chai should request
+```
+
 ### Na pasta do projeto execute
 ```bash
 mocha --recursive --require mocha-steps --timeout 0 
