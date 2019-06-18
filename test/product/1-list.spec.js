@@ -5,7 +5,7 @@ const logger  = require("mocha-logger");
 const env     = require("../local.env.json");
 const expect  = chai.expect;
 
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+// process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 const urlBase          = env.urlBase;
 const urlCrfws         = `${urlBase}/crfws`;
@@ -20,7 +20,8 @@ describe("List of Products", function () {
     let qs   = {
       category   : env.product.category,
       pageSize   : env.product.pageSize,
-      currentPage: 0
+      currentPage: 0,
+      strictSSL: env.strictSSL
     };
     request.get(
         {
