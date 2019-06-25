@@ -10,12 +10,12 @@ Pré-requisito: NodeJS >= 11.0.0
 
 ### Instale as dependências de teste globalmente
 ```bash
-npm install -g mocha mocha-steps chai should request
+npm install -g mocha mocha-steps
 ```
 
 ### Instale as dependências de teste no projeto
 ```bash
-npm install mocha mocha-steps chai should request
+npm i
 ```
 
 ### Na pasta do projeto execute
