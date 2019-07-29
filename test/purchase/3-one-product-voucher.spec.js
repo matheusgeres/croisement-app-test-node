@@ -25,7 +25,7 @@ const url = {
 
 describe("Make a purchase with one product", function () {
   // Variáveis globais que são reutilizadas entre as chamadas.
-  let headers              = {};url
+  let headers              = {};
   let productCodesToDelete = [];
   let cartCode;
   let addressId;
@@ -122,7 +122,7 @@ describe("Make a purchase with one product", function () {
     const requestData = {
       url    : url,
       headers: headers,
-      voucher: env.promotion.voucherCode
+      voucher: env.promotion.voucher
     };
 
     let responseData = await customer.applyVoucher(env, requestData);
