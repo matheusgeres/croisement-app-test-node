@@ -18,10 +18,18 @@ npm install -g mocha mocha-steps
 npm i
 ```
 
-### Na pasta do projeto execute
+### Na pasta do projeto execute o teste
+
+#### Todos os testes
 ```bash
 mocha --recursive --require mocha-steps --timeout 0 
 ```
+
+#### Individual
+```bash
+mocha test/purchase/1-one-product.spec.js --require mocha-steps --timeout 0
+```
+Lembrando que no teste individual fica a critério de escolher qual teste será executado.
 
 ### O resultado no terminal será o seguinte
 ![exemplo](doc/exemplo-execucao-teste.png)
