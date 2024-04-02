@@ -1,6 +1,6 @@
-# carrefour-app-test-node
+# croisement-app-test-node
 
-Teste automatizado da API do Carrefour para o APP.
+Teste automatizado da API do Croisement [*](#censurado) para o APP.
 
 Pré-requisito: NodeJS >= 11.0.0
  
@@ -33,3 +33,6 @@ Lembrando que no teste individual fica a critério de escolher qual teste será 
 
 ### O resultado no terminal será o seguinte
 ![exemplo](doc/exemplo-execucao-teste.png)
+
+# censurado 
+* nome original foi censurado pela empresa

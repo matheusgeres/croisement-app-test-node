@@ -13,7 +13,7 @@ const urlBase          = env.urlBase;
 const urlCrfws         = `${urlBase}/crfws`;
 const urlAuthorization = `${urlBase}/authorizationserver`;
 const foodURL          = `${urlBase}/foodws`;
-const siteId           = "/v2/carrefour";
+const siteId           = "/v2/croisement";
 
 const url = {
   urlBase         : urlBase,
